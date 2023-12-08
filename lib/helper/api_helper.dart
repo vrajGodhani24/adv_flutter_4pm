@@ -8,33 +8,47 @@ class APIHelper {
 
   static final APIHelper apiHelper = APIHelper._();
 
-  Future<List<Photo>> fetchImages() async {
+  Future<List<Photo>> fetchPhotosFromAPI() async {
     String apiKey = '39250301-82c95e13e873140cd9dfd6bd9';
-    String api = "https://pixabay.com/api/?key=$apiKey";
+    List<Photo> fetchedPhotos = [];
 
-    http.Response res = await http.get(Uri.parse(api));
+    String api = 'https://pixabay.com/api/?key=$apiKey';
 
-    dynamic data = jsonDecode(res.body);
+    http.Response response = await http.get(Uri.parse(api));
 
-    List<dynamic> imagesData = data['hits'];
+    if (response.statusCode == 200) {
+      String data = response.body;
 
-    List<Photo> allPhotos = imagesData.map((e) => Photo.fromJson(e)).toList();
+      Map<String, dynamic> fetchApiData = jsonDecode(data);
 
-    return allPhotos;
+      List allPhotosData = fetchApiData['hits'];
+
+      fetchedPhotos = allPhotosData
+          .map((e) => Photo(largeImageURL: e['largeImageURL']))
+          .toList();
+    }
+    return fetchedPhotos;
   }
 
-  Future<List<Photo>> searchImages(String searchText) async {
+  Future<List<Photo>> fetchPhotosFromAPISearching(String searchText) async {
     String apiKey = '39250301-82c95e13e873140cd9dfd6bd9';
-    String api = "https://pixabay.com/api/?key=$apiKey&q=$searchText";
+    List<Photo> fetchedPhotos = [];
 
-    http.Response res = await http.get(Uri.parse(api));
+    String api = 'https://pixabay.com/api/?key=$apiKey&q=$searchText';
 
-    dynamic data = jsonDecode(res.body);
+    http.Response response = await http.get(Uri.parse(api));
 
-    List<dynamic> imagesData = data['hits'];
+    if (response.statusCode == 200) {
+      String data = response.body;
 
-    List<Photo> allPhotos = imagesData.map((e) => Photo.fromJson(e)).toList();
+      Map<String, dynamic> fetchApiData = jsonDecode(data);
 
-    return allPhotos;
+      List allPhotosData = fetchApiData['hits'];
+
+      fetchedPhotos = allPhotosData
+          .map((e) => Photo(largeImageURL: e['largeImageURL']))
+          .toList();
+    }
+    return fetchedPhotos;
   }
 }

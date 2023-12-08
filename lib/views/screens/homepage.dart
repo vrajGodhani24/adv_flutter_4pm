@@ -1,5 +1,6 @@
 import 'package:adv_flutter_4pm/helper/api_helper.dart';
 import 'package:adv_flutter_4pm/model/photo.dart';
+import 'package:async_wallpaper/async_wallpaper.dart';
 import 'package:flutter/material.dart';
 
 class HomePage extends StatefulWidget {
@@ -10,25 +11,26 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<Photo> photos = [];
+  List<Photo> allPhotos = [];
 
   @override
   void initState() {
     super.initState();
-
-    getImages();
+    getPhotos();
   }
 
-  Future<void> getImages() async {
-    photos = await APIHelper.apiHelper.fetchImages();
-    setState(() {});
+  getPhotos() async {
+    await APIHelper.apiHelper.fetchPhotosFromAPI().then((value) {
+      allPhotos = value;
+      setState(() {});
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("HomePage"),
+        title: const Text("WallPaper App"),
       ),
       body: Container(
         padding: const EdgeInsets.all(8),
@@ -39,8 +41,12 @@ class _HomePageState extends State<HomePage> {
               flex: 1,
               child: TextField(
                 onChanged: (val) async {
-                  photos = await APIHelper.apiHelper.searchImages(val);
-                  setState(() {});
+                  await APIHelper.apiHelper
+                      .fetchPhotosFromAPISearching(val)
+                      .then((value) {
+                    allPhotos = value;
+                    setState(() {});
+                  });
                 },
                 decoration: const InputDecoration(
                   hintText: 'Search',
@@ -48,18 +54,33 @@ class _HomePageState extends State<HomePage> {
               ),
             ),
             Expanded(
-              flex: 10,
+              flex: 9,
               child: GridView(
                 gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2, mainAxisSpacing: 8, crossAxisSpacing: 8),
-                children: photos
-                    .map((e) => Container(
-                          decoration: BoxDecoration(
-                            image: DecorationImage(
-                                image: NetworkImage(e.largeImageURL),
-                                fit: BoxFit.cover),
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                ),
+                children: allPhotos
+                    .map(
+                      (e) => Container(
+                        alignment: Alignment.bottomRight,
+                        decoration: BoxDecoration(
+                          image: DecorationImage(
+                            image: NetworkImage(e.largeImageURL),
+                            fit: BoxFit.cover,
                           ),
-                        ))
+                        ),
+                        child: IconButton(
+                          icon: const Icon(Icons.wallpaper),
+                          onPressed: () async {
+                            await AsyncWallpaper.setWallpaper(
+                                url: e.largeImageURL,
+                                wallpaperLocation: AsyncWallpaper.BOTH_SCREENS);
+                          },
+                        ),
+                      ),
+                    )
                     .toList(),
               ),
             ),
